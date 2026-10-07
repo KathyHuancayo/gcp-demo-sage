@@ -2,7 +2,7 @@
 # lo distingue dai bucket creati a mano negli esercizi CLI/Console del corso, che usano
 # "-manual-docs" per non entrare mai in conflitto con questa risorsa.
 resource "google_storage_bucket" "sage_docs" {
-  name          = "${var.project_id}-${var.docs_bucket_suffix}"
+  name          = "${local.name_prefix}-${var.docs_bucket_suffix}"
   project       = var.project_id
   location      = var.region
   storage_class = "STANDARD"

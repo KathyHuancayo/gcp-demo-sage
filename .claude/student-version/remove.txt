@@ -1,0 +1,13 @@
+devops/cloud/.terraform.lock.hcl
+devops/cloud/artifact_registry.tf
+devops/cloud/bigquery.tf
+devops/cloud/cloud_run.tf
+devops/cloud/firestore.tf
+devops/cloud/iam.tf
+devops/cloud/locals.tf
+devops/cloud/outputs.tf
+devops/cloud/providers.tf
+devops/cloud/services.tf
+devops/cloud/storage.tf
+devops/cloud/variables.tf
+devops/cloud/versions.tf

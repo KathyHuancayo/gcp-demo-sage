@@ -2,7 +2,7 @@
 # risponde. Nessuna orchestrazione multi-componente, quindi niente GKE: Cloud Run basta.
 resource "google_cloud_run_v2_service" "sage" {
   project  = var.project_id
-  name     = var.app_name
+  name     = local.app_name
   location = var.region
 
   template {
@@ -27,6 +27,10 @@ resource "google_cloud_run_v2_service" "sage" {
       env {
         name  = "SAGE_REGION"
         value = var.region
+      }
+      env {
+        name  = "SAGE_RESOURCE_PREFIX"
+        value = var.resource_prefix
       }
       env {
         name  = "SAGE_FIRESTORE_COLLECTION"

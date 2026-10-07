@@ -82,6 +82,10 @@ gcloud billing projects link its-ict-<nome>-<cognome> --billing-account=<ID_BILL
 gcloud config set project its-ict-<nome>-<cognome>
 ```
 
+> **Progetto condiviso tra più persone?** Se il progetto GCP è uno solo per tutti (invece di
+> uno a testa), usa un **prefisso** per distinguere le tue risorse da quelle degli altri:
+> `its-ict-sage-<nome>-<cognome>`. Vedi [Progetto dedicato o condiviso](#progetto-dedicato-o-condiviso).
+
 ### 2. Configura le variabili locali e Terraform
 
 ```bash
@@ -91,8 +95,10 @@ cp devops/cloud/backend.hcl.example devops/cloud/backend.hcl
 ```
 
 In tutti e tre i file sostituisci `its-ict-template-sage` con il tuo project id reale
-(`its-ict-<nome>-<cognome>`). Questi tre file sono nel `.gitignore`: restano solo sulla tua
-macchina/nel tuo ambiente CI, non finiscono mai nel repository.
+(`its-ict-<nome>-<cognome>`); in un progetto condiviso usa il progetto condiviso come
+`project_id` e valorizza anche il prefisso (`SAGE_RESOURCE_PREFIX` in `.env`,
+`resource_prefix` in `terraform.tfvars`, nome del bucket in `backend.hcl`). Questi tre file
+sono nel `.gitignore`: restano solo sulla tua macchina/nel tuo ambiente CI, non finiscono mai nel repository.
 
 ### 3. Bootstrap una tantum del progetto GCP e delle pipeline
 
@@ -102,13 +108,27 @@ statiche) e ti guida nella configurazione delle variabili del repository GitHub.
 
 ### 4. Crea l'infrastruttura con Terraform
 
+<!-- teacher-only -->
 In locale (oppure lancia manualmente il workflow `terraform.yml` — tab **Actions** del
 repository → *terraform* → *Run workflow* — che fa `plan` e poi richiede un'approvazione
 manuale su una issue prima di applicare):
+<!-- /teacher-only -->
+<!-- student-only
+`devops/cloud/` parte senza risorse: i file `.tf` (bucket, Firestore, BigQuery, Cloud Run,
+IAM, Artifact Registry, ...) li scrivi tu, modulo per modulo, seguendo gli esercizi del
+corso. Restano già pronti solo i file di configurazione (`backend.hcl`, `terraform.tfvars`,
+copiati dai rispettivi `.example` al passo 2).
+
+Una volta scritte le risorse, il flusso resta questo, in locale (oppure lanciando
+manualmente il workflow `terraform.yml` — tab **Actions** del repository → *terraform* →
+*Run workflow* — che fa `plan` e poi richiede un'approvazione manuale su una issue prima di
+applicare):
+student-only -->
 
 ```bash
 cd devops/cloud
-gcloud storage buckets create gs://<il-tuo-project-id>-tfstate \
+# <il-tuo-prefisso> = project id (progetto dedicato) oppure resource prefix (progetto condiviso)
+gcloud storage buckets create gs://<il-tuo-prefisso>-tfstate \
   --project <il-tuo-project-id> --location europe-west6 --uniform-bucket-level-access
 
 terraform init -backend-config=backend.hcl
@@ -177,6 +197,25 @@ curl -X POST "$SAGE_URL/api/ask" \
   -H "Content-Type: application/json" \
   -d '{"question": "Perché Sage usa Firestore invece di un database vettoriale separato?"}'
 ```
+
+## Progetto dedicato o condiviso
+
+Il **project id** (`PROJECT_ID`) e il **prefisso dei nomi** (`RESOURCE_PREFIX`) sono due
+concetti distinti, anche se in un progetto dedicato coincidono:
+
+| | Progetto dedicato (default) | Progetto condiviso |
+|---|---|---|
+| `RESOURCE_PREFIX` | vuoto | `its-ict-sage-<nome>-<cognome>` |
+| Bucket documenti / state | `<project_id>-sage-docs` / `<project_id>-tfstate` | `<prefisso>-sage-docs` / `<prefisso>-tfstate` |
+| Cloud Run, Artifact Registry | `sage` | `<prefisso>-sage` |
+| Service account runtime | `sage-run` | `<prefisso>-sage-run` (accorciato con un hash oltre i 30 caratteri) |
+| Database Firestore | `(default)` | `<prefisso>` |
+| Dataset BigQuery | `sage_analytics` | `<prefisso, con _ al posto di ->_sage_analytics` |
+| Pool WIF e SA di CI (bootstrap) | `github-actions-pool`, `github-deployer` | derivati dal prefisso |
+
+Dove si imposta: `SAGE_RESOURCE_PREFIX` (`sources/backend/.env`), `resource_prefix`
+(`devops/cloud/terraform.tfvars`), variabile di repository GitHub `RESOURCE_PREFIX`, terzo
+argomento di `setup-gcp-once.sh`. Se non è valorizzato, tutto si comporta come prima.
 
 ## Pulizia risorse
 

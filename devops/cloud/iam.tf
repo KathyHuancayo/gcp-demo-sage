@@ -3,7 +3,7 @@
 # scrivere righe su BigQuery) — mai roles/owner o roles/editor a runtime.
 resource "google_service_account" "sage_run" {
   project      = var.project_id
-  account_id   = "${var.app_name}-run"
+  account_id   = local.sage_run_account_id
   display_name = "Sage Cloud Run runtime"
 }
 

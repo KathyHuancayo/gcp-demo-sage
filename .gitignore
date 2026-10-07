@@ -25,5 +25,6 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Claude Code
-.claude/
+# Claude Code (locale), tranne gli strumenti per la versione studenti (vedi .claude/student-version-diffs.md)
+.claude/*
+!.claude/student-version*

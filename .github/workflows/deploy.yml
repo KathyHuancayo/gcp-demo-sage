@@ -30,7 +30,12 @@ jobs:
         id: image
         run: |
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          IMAGE="${{ vars.REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/sage/sage:${SHORT_SHA}"
+          # Stessa regola di devops/cloud/locals.tf: "sage", oppure "<prefisso>-sage" in un
+          # progetto condiviso. Vale sia per il repository Artifact Registry sia per Cloud Run.
+          PREFIX="${{ vars.RESOURCE_PREFIX }}"
+          APP="${PREFIX:+${PREFIX}-}sage"
+          IMAGE="${{ vars.REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${APP}/${APP}:${SHORT_SHA}"
+          echo "app=$APP" >> "$GITHUB_OUTPUT"
           echo "tag=$IMAGE" >> "$GITHUB_OUTPUT"
 
       - uses: docker/build-push-action@v6
@@ -41,7 +46,7 @@ jobs:
 
       - name: Deploy su Cloud Run
         run: |
-          gcloud run deploy sage \
+          gcloud run deploy "${{ steps.image.outputs.app }}" \
             --project "${{ vars.PROJECT_ID }}" \
             --region "${{ vars.REGION }}" \
             --image "${{ steps.image.outputs.tag }}"

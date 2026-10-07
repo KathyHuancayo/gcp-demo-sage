@@ -9,6 +9,9 @@ gcloud auth login
 gcloud config set project <IL_TUO_PROJECT_ID>
 
 ./.github/setup/setup-gcp-once.sh <IL_TUO_PROJECT_ID> <tuo-utente-github>/<nome-repo>
+
+# Progetto condiviso tra più persone: aggiungi il tuo prefisso come terzo argomento
+./.github/setup/setup-gcp-once.sh <PROJECT_ID_CONDIVISO> <tuo-utente-github>/<nome-repo> its-ict-sage-<nome>-<cognome>
 ```
 
 Lo script crea il Workload Identity Pool/Provider e il service account `github-deployer`
@@ -23,6 +26,7 @@ aggiungi (repository variables, non secrets — non sono informazioni sensibili)
 |---|---|---|
 | `PROJECT_ID` | Il tuo project id GCP | `its-ict-mario-rossi` |
 | `PROJECT_NUMBER` | Stampato dallo script | `123456789012` |
+| `RESOURCE_PREFIX` | Solo progetto condiviso: il tuo prefisso. In un progetto dedicato **non creare la variabile** | `its-ict-sage-mario-rossi` |
 | `REGION` | Regione del corso | `europe-west6` |
 | `WIF_PROVIDER` | Stampato dallo script | `projects/.../workloadIdentityPools/github-actions-pool/providers/github-provider` |
 | `WIF_SERVICE_ACCOUNT` | Stampato dallo script | `github-deployer@its-ict-mario-rossi.iam.gserviceaccount.com` |

@@ -5,7 +5,7 @@
 # sources/backend/src/sage/integrations/bigquery/question_log.py).
 resource "google_bigquery_dataset" "sage_analytics" {
   project    = var.project_id
-  dataset_id = var.bq_dataset
+  dataset_id = local.bq_dataset
   location   = var.region
 
   depends_on = [google_project_service.apis]

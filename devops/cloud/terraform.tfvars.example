@@ -3,3 +3,7 @@
 
 project_id = "its-ict-template-sage"
 region     = "europe-west6"
+
+# Progetto condiviso tra più persone: decommenta e usa il tuo prefisso. Tutte le risorse
+# prenderanno questo prefisso nel nome (e project_id sopra sarà il progetto condiviso).
+# resource_prefix = "its-ict-sage-<nome>-<cognome>"

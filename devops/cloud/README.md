@@ -18,6 +18,20 @@ separazione dev/test/prod. Ogni studente applica questo modulo sul proprio proge
 Niente Secret Manager: Sage chiama Vertex AI con Application Default Credentials, non
 servono API key esterne da custodire come segreto.
 
+## Nomi delle risorse: `resource_prefix`
+
+`locals.tf` è l'unico punto in cui si decide come si chiamano le risorse. Con
+`resource_prefix` vuoto (default) il progetto è dedicato e i nomi sono quelli fissi
+(`sage`, `(default)`, `sage_analytics`; bucket `<project_id>-...`). Con `resource_prefix`
+valorizzato (es. `its-ict-sage-mario-rossi`) il progetto è condiviso e ogni nome parte dal
+prefisso, adattato alle regole di ogni servizio:
+
+- Cloud Run e Artifact Registry: `<prefisso>-sage`
+- Bucket: `<prefisso>-sage-docs` (e `<prefisso>-tfstate` per lo state)
+- Firestore: un database per persona, chiamato come il prefisso (in un progetto c'è un solo `(default)`)
+- BigQuery: dataset `<prefisso con _ al posto di ->_sage_analytics` (i dataset non ammettono trattini)
+- Service account: `<prefisso>-sage-run`, accorciato con un hash se supera i 30 caratteri
+
 ## Perché l'immagine Cloud Run non è gestita da Terraform
 
 `cloud_run.tf` imposta `container_image` su un placeholder pubblico e poi lo ignora
@@ -32,11 +46,11 @@ codice non richiede di rieseguire un piano Terraform, e viceversa.
 cd devops/cloud
 
 # una tantum: crea il bucket di state se non esiste già
-gcloud storage buckets create gs://<project_id>-tfstate \
+gcloud storage buckets create gs://<project_id o resource_prefix>-tfstate \
   --project <project_id> --location europe-west6 --uniform-bucket-level-access
 
 cp backend.hcl.example backend.hcl        # e modifica il bucket
-cp terraform.tfvars.example terraform.tfvars  # e modifica project_id
+cp terraform.tfvars.example terraform.tfvars  # e modifica project_id (e resource_prefix se condiviso)
 
 terraform init -backend-config=backend.hcl
 terraform plan  -var-file=terraform.tfvars

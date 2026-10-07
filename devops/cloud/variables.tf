@@ -4,6 +4,17 @@ variable "project_id" {
   default     = "its-ict-template-sage"
 }
 
+variable "resource_prefix" {
+  description = "Prefisso dei nomi delle risorse. Vuoto (default) = progetto dedicato: le risorse usano nomi fissi e i nomi globali (bucket) derivano da project_id. Valorizzato = progetto condiviso tra più persone: ogni nome di risorsa parte da questo prefisso (its-ict-sage-<nome>-<cognome>), così nessuno collide con gli altri."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.resource_prefix == "" || can(regex("^[a-z][a-z0-9-]{2,38}[a-z0-9]$", var.resource_prefix))
+    error_message = "resource_prefix: 4-40 caratteri, minuscole/cifre/trattini, inizia con una lettera e non finisce con un trattino."
+  }
+}
+
 variable "region" {
   description = "Regione GCP per tutte le risorse."
   type        = string

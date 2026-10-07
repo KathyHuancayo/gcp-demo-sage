@@ -3,6 +3,9 @@ name: terraform
 # Pipeline dell'infrastruttura, separata da quella applicativa (deploy.yml): una modifica
 # al codice non richiede di rieseguire un piano Terraform, e viceversa.
 #
+# RESOURCE_PREFIX (variabile del repository, opzionale): se valorizzato il progetto GCP è
+# condiviso e tutte le risorse (incluso il bucket di state) portano questo prefisso.
+#
 # Avvio manuale; apply aspetta un'approvazione manuale su una issue GitHub prima di
 # applicare esattamente il piano già revisionato.
 
@@ -35,9 +38,9 @@ jobs:
 
       - name: Assicura che il bucket dello state esista
         run: |
-          gcloud storage buckets describe "gs://${{ vars.PROJECT_ID }}-tfstate" \
+          gcloud storage buckets describe "gs://${{ vars.RESOURCE_PREFIX || vars.PROJECT_ID }}-tfstate" \
             --project "${{ vars.PROJECT_ID }}" >/dev/null 2>&1 || \
-          gcloud storage buckets create "gs://${{ vars.PROJECT_ID }}-tfstate" \
+          gcloud storage buckets create "gs://${{ vars.RESOURCE_PREFIX || vars.PROJECT_ID }}-tfstate" \
             --project "${{ vars.PROJECT_ID }}" \
             --location "${{ vars.REGION }}" \
             --uniform-bucket-level-access
@@ -47,7 +50,7 @@ jobs:
       - name: Terraform init
         run: |
           terraform init \
-            -backend-config="bucket=${{ vars.PROJECT_ID }}-tfstate" \
+            -backend-config="bucket=${{ vars.RESOURCE_PREFIX || vars.PROJECT_ID }}-tfstate" \
             -backend-config="prefix=sage"
 
       - name: Terraform validate
@@ -58,6 +61,7 @@ jobs:
           terraform plan \
             -var "project_id=${{ vars.PROJECT_ID }}" \
             -var "region=${{ vars.REGION }}" \
+            -var "resource_prefix=${{ vars.RESOURCE_PREFIX }}" \
             -out=tfplan
 
       - uses: actions/upload-artifact@v4
@@ -98,7 +102,7 @@ jobs:
       - name: Terraform init
         run: |
           terraform init \
-            -backend-config="bucket=${{ vars.PROJECT_ID }}-tfstate" \
+            -backend-config="bucket=${{ vars.RESOURCE_PREFIX || vars.PROJECT_ID }}-tfstate" \
             -backend-config="prefix=sage"
 
       - uses: actions/download-artifact@v4
