@@ -50,7 +50,12 @@ resource "google_cloud_run_v2_service" "sage" {
   # L'immagine viene aggiornata da .github/workflows/deploy.yml (gcloud run deploy), non
   # da Terraform: senza questo, ogni apply riporterebbe il servizio al placeholder.
   lifecycle {
-    ignore_changes = [template[0].containers[0].image]
+    ignore_changes = [
+      template[0].containers[0].image,
+      # Il blocco scaling a livello di servizio è valorizzato dall'API (0) ma non da noi: senza
+      # questo ogni plan propone di toglierlo.
+      scaling,
+    ]
   }
 
   depends_on = [google_project_service.apis]

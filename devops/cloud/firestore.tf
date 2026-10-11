@@ -28,4 +28,11 @@ resource "google_firestore_index" "chunks_embedding" {
       flat {}
     }
   }
+
+  # Dopo la creazione l'API restituisce i campi dell'indice in forma diversa (aggiunge
+  # `__name__`), e il provider lo legge come una differenza che forza la ricreazione
+  # dell'indice a ogni plan. Un indice vettoriale non è modificabile in-place comunque.
+  lifecycle {
+    ignore_changes = [fields]
+  }
 }
