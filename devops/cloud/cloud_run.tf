@@ -55,6 +55,9 @@ resource "google_cloud_run_v2_service" "sage" {
       # Il blocco scaling a livello di servizio è valorizzato dall'API (0) ma non da noi: senza
       # questo ogni plan propone di toglierlo.
       scaling,
+      # Valorizzati da `gcloud run deploy` (deploy.yml), non da Terraform.
+      client,
+      client_version,
     ]
   }
 
