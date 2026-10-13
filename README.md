@@ -94,7 +94,7 @@ cp devops/cloud/terraform.tfvars.example devops/cloud/terraform.tfvars
 cp devops/cloud/backend.hcl.example devops/cloud/backend.hcl
 ```
 
-In tutti e tre i file sostituisci `its-ict-template-sage` con il tuo project id reale
+In tutti e tre i file sostituisci `its-ict-sage-csp26` con il tuo project id reale
 (`its-ict-<nome>-<cognome>`); in un progetto condiviso usa il progetto condiviso come
 `project_id` e valorizza anche il prefisso (`SAGE_RESOURCE_PREFIX` in `.env`,
 `resource_prefix` in `terraform.tfvars`, nome del bucket in `backend.hcl`). Questi tre file
