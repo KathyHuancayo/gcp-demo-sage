@@ -4,12 +4,31 @@ variable "container_image" {
   default     = "us-docker.pkg.dev/cloudrun/container/hello"
 }
 
+variable "app_name" {
+  description = "Nome base usato per Cloud Run, Artifact Registry e il service account applicativo."
+  type        = string
+  default     = "sage-backend"
+}
+
+locals {
+  # Cloud Run, Artifact Registry, service account: "<prefisso>-<app_name>".
+  app_name = "${var.resource_prefix}-${var.app_name}"
+
+  # account_id di un service account: massimo 30 caratteri. Se "<app_name>-run" non ci sta,
+  # si tronca e si aggiunge un hash del nome completo per mantenerlo univoco e stabile.
+  sage_run_account_id = (
+    length("${local.app_name}-run") <= 30
+    ? "${local.app_name}-run"
+    : "${substr(local.app_name, 0, 17)}-${substr(md5(local.app_name), 0, 8)}-run"
+  )
+}
+
 # Repository Docker per le immagini del backend di Sage, popolato dalla pipeline di deploy
 # (.github/workflows/deploy.yml), separata dalla pipeline Terraform.
 resource "google_artifact_registry_repository" "sage" {
   project       = var.project_id
   location      = var.region
-  repository_id = "${var.resource_prefix}-sage-backend"
+  repository_id = local.app_name
   description   = "Immagini Docker di Sage"
   format        = "DOCKER"
 
@@ -21,7 +40,7 @@ resource "google_cloud_run_v2_service" "sage_backend" {
   project  = var.project_id
   location = var.region
 
-  name    = "${var.resource_prefix}-sage-backend"
+  name    = local.app_name
   ingress = "INGRESS_TRAFFIC_ALL"
 
   deletion_protection = false
@@ -81,7 +100,7 @@ resource "google_cloud_run_v2_service" "sage_backend" {
 # Service account con cui gira il backend su Cloud Run (privilegio minimo).
 resource "google_service_account" "sage_run" {
   project      = var.project_id
-  account_id   = "${var.resource_prefix}-sage-backend"
+  account_id   = local.sage_run_account_id
   display_name = "Sage - runtime Cloud Run"
 
   depends_on = [google_project_service.apis]
