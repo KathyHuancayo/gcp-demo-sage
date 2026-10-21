@@ -4,6 +4,8 @@ variable "container_image" {
   default     = "us-docker.pkg.dev/cloudrun/container/hello"
 }
 
+# Repository Docker per le immagini del backend di Sage, popolato dalla pipeline di deploy
+# (.github/workflows/deploy.yml), separata dalla pipeline Terraform.
 resource "google_artifact_registry_repository" "sage" {
   project       = var.project_id
   location      = var.region
@@ -14,13 +16,13 @@ resource "google_artifact_registry_repository" "sage" {
   depends_on = [google_project_service.apis]
 }
 
-
+# Servizio HTTP stateless: riceve la domanda, chiama l'LLM su Vertex AI, risponde.
 resource "google_cloud_run_v2_service" "sage_backend" {
   project  = var.project_id
   location = var.region
 
-  name     = "${var.resource_prefix}-sage-backend"
-  ingress  = "INGRESS_TRAFFIC_ALL"
+  name    = "${var.resource_prefix}-sage-backend"
+  ingress = "INGRESS_TRAFFIC_ALL"
 
   deletion_protection = false
 
@@ -76,6 +78,7 @@ resource "google_cloud_run_v2_service" "sage_backend" {
   ]
 }
 
+# Service account con cui gira il backend su Cloud Run (privilegio minimo).
 resource "google_service_account" "sage_run" {
   project      = var.project_id
   account_id   = "${var.resource_prefix}-sage-backend"
