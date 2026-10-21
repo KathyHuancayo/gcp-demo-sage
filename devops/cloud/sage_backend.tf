@@ -1,3 +1,15 @@
+# Repository Docker per le immagini dell'API di Sage, popolato dalla pipeline di deploy
+# (.github/workflows/deploy.yml), separata dalla pipeline Terraform.
+resource "google_artifact_registry_repository" "sage" {
+  project       = var.project_id
+  location      = var.region
+  repository_id = local.app_name
+  format        = "DOCKER"
+  description   = "Immagini container dell'API di Sage"
+
+  depends_on = [google_project_service.apis]
+}
+
 # Servizio HTTP stateless: riceve la domanda, fa retrieval su Firestore, chiama l'LLM,
 # risponde. Nessuna orchestrazione multi-componente, quindi niente GKE: Cloud Run basta.
 resource "google_cloud_run_v2_service" "sage" {
@@ -10,7 +22,7 @@ resource "google_cloud_run_v2_service" "sage" {
 
     scaling {
       min_instance_count = 0
-      max_instance_count = 3
+      max_instance_count = 1
     }
 
     containers {
@@ -20,18 +32,6 @@ resource "google_cloud_run_v2_service" "sage" {
         container_port = 8080
       }
 
-      env {
-        name  = "SAGE_PROJECT_ID"
-        value = var.project_id
-      }
-      env {
-        name  = "SAGE_REGION"
-        value = var.region
-      }
-      env {
-        name  = "SAGE_RESOURCE_PREFIX"
-        value = var.resource_prefix
-      }
       env {
         name  = "SAGE_FIRESTORE_COLLECTION"
         value = var.firestore_collection
@@ -75,4 +75,30 @@ resource "google_cloud_run_v2_service_iam_member" "public_invoker" {
   name     = google_cloud_run_v2_service.sage.name
   role     = "roles/run.invoker"
   member   = "allUsers"
+}
+
+# Service account con cui gira l'API su Cloud Run. Privilegio minimo: solo i ruoli che
+# servono davvero all'app (leggere/scrivere chunk su Firestore, chiamare Vertex AI,
+# scrivere righe su BigQuery) — mai roles/owner o roles/editor a runtime.
+resource "google_service_account" "sage_run" {
+  project      = var.project_id
+  account_id   = local.sage_run_account_id
+  display_name = "Sage Cloud Run runtime"
+}
+
+locals {
+  sage_run_roles = [
+    "roles/datastore.user",
+    "roles/aiplatform.user",
+    "roles/bigquery.dataEditor",
+    "roles/bigquery.jobUser",
+  ]
+}
+
+resource "google_project_iam_member" "sage_run" {
+  for_each = toset(local.sage_run_roles)
+
+  project = var.project_id
+  role    = each.value
+  member  = "serviceAccount:${google_service_account.sage_run.email}"
 }
