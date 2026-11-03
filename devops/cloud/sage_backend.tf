@@ -110,3 +110,10 @@ resource "google_project_iam_member" "sage_run_vertex" {
   role    = "roles/aiplatform.user"
   member  = "serviceAccount:${google_service_account.sage_run.email}"
 }
+
+# Permesso di chiamare Firestore
+resource "google_project_iam_member" "sage_run_firestore" {
+  project = var.project_id
+  role    = "roles/datastore.user"
+  member  = "serviceAccount:${google_service_account.sage_run.email}"
+}
