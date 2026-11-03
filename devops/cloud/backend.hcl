@@ -1,2 +1,2 @@
-bucket = "its-ict-katherinne-huancayo-docs"
+bucket = "its-ict-sage-katherinne-huancayo-tfstate"
 prefix = "sage"
