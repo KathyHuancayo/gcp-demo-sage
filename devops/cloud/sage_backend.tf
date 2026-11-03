@@ -86,6 +86,15 @@ resource "google_cloud_run_v2_service" "sage_backend" {
   ]
 }
 
+# Accesso pubblico (non autenticato): chiunque può invocare il servizio.
+resource "google_cloud_run_v2_service_iam_member" "sage_public" {
+  project  = var.project_id
+  location = var.region
+  name     = google_cloud_run_v2_service.sage_backend.name
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
+
 # Service account con cui gira il backend su Cloud Run (privilegio minimo).
 resource "google_service_account" "sage_run" {
   project      = var.project_id
