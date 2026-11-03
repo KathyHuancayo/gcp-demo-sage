@@ -33,7 +33,7 @@ jobs:
           # Stessa regola di devops/cloud/locals.tf: "sage", oppure "<prefisso>-sage" in un
           # progetto condiviso. Vale sia per il repository Artifact Registry sia per Cloud Run.
           PREFIX="${{ vars.RESOURCE_PREFIX }}"
-          APP="${PREFIX:+${PREFIX}-}sage"
+          APP="${PREFIX:+${PREFIX}-}sage-backend"
           IMAGE="${{ vars.REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${APP}/${APP}:${SHORT_SHA}"
           echo "app=$APP" >> "$GITHUB_OUTPUT"
           echo "tag=$IMAGE" >> "$GITHUB_OUTPUT"
