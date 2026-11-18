@@ -244,3 +244,32 @@ La struttura del codice segue tre livelli con dipendenza a senso unico
 `webapp → domain → integrations` (vedi i docstring dei rispettivi `__init__.py` per il
 dettaglio): `webapp/` è il solo livello che conosce FastAPI, `domain/` contiene la logica
 RAG pura, `integrations/` isola le chiamate a Vertex AI, Firestore e BigQuery.
+
+## Verifica finale
+
+Nome e Cognome: Katherinne Huancayo Ramos
+Corso: Google Cloud Platform
+
+Ho fatto la verifica sul mio fork, nel progetto condiviso `its-ict-sage-csp26`, usando il mio prefisso `its-ict-sage-katherinne-huancayo`. Non ho toccato nulla che non fosse mio.
+
+### Task 1: rispondere con i documenti indicizzati
+
+Il servizio Cloud Run (1 vCPU, 2 GiB) lo creo con Terraform in `devops/cloud/sage_backend.tf`. L'immagine invece la pubblica la pipeline `deploy.yml`, lanciata a mano. Ho eseguito `utils/ingest_documents.py` per riempire Firestore: 2 file, 6 chunk. Poi ho provato `POST /api/ask` da `/docs` e la risposta Ã¨ arrivata con `sources` che indicano `sage-overview.md` e `gcp-region-europe-west6.md`.
+
+### Task 2: istruzioni lette da Cloud Storage
+
+Il bucket `its-ict-sage-katherinne-huancayo-instructions` lo crea `devops/cloud/instructions.tf`. LÃ¬ ho dato al service account di Cloud Run solo `roles/storage.objectViewer` sul bucket, non sul progetto. Il file `devops/cloud/istruzioni.md` ha il testo dell'appendice (stile Dante, al massimo tre terzine) e l'ho caricato con `gcloud storage cp`.
+
+Nel codice, `integrations/storage/instructions.py` scarica il file a ogni richiesta, senza cache, e `domain/qa/generation.py` lo aggiunge in fondo al prompt. Il formato JSON della risposta Ã¨ rimasto uguale. Se il file non si riesce a leggere, scrive un warning nel log e risponde comunque senza le istruzioni.
+
+Per essere sicura che lo legga davvero ogni volta, ho messo nel bucket per un momento un file con uno stile diverso (da pirata), senza rifare il deploy. La risposta Ã¨ cambiata subito. Poi ho rimesso la versione Dante.
+
+Ho scritto anche `tests/test_generation.py`, con 4 test. Adesso i test sono 7 e passano tutti.
+
+### Due scelte da dire
+
+Ho messo `gemini-3.8-flash` come modello di default. `gemini-2.5-flash` nella documentazione Google risulta in dismissione, anche se nel mio progetto rispondeva ancora. L'ho cambiato per precauzione.
+
+In `sage_backend.tf` ho aggiunto `scaling` a `ignore_changes`. Senza, `terraform plan` proponeva sempre una modifica che era solo drift.
+
+Ho usato Claude come aiuto per capire gli errori nel mio codice. Poi ho lanciato Terraform, gcloud, i test e i deploy.
