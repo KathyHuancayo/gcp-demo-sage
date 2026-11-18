@@ -22,8 +22,8 @@ class AppConfig(BaseSettings):
     firestore_collection: str = "chunks"
     top_k: int = 5
 
-    # Vertex AI models
-    chat_model: str = "gemini-2.5-flash"
+    # Vertex AI models (gemini-2.5-flash was retired on Vertex AI on 2026-10-20)
+    chat_model: str = "gemini-3.8-flash"
     embedding_model: str = "text-embedding-004"
     embedding_dimension: int = 768
 
@@ -34,12 +34,19 @@ class AppConfig(BaseSettings):
     # Ingestion
     chunk_max_chars: int = 1500
 
+    # Additional instructions read from Cloud Storage on every request. Empty bucket = derived
+    # from the prefix ("<prefix>-instructions") or, in a dedicated project, from the project id.
+    instructions_bucket: str = ""
+    instructions_file: str = "istruzioni.md"
+
     @model_validator(mode="after")
     def _apply_resource_prefix(self) -> "AppConfig":
         """Shared-project mode: every person gets their own Firestore database and BQ dataset.
 
         `bq_dataset` is the base name; after validation it is always the final dataset id.
         """
+        if not self.instructions_bucket:
+            self.instructions_bucket = f"{self.resource_prefix or self.project_id}-instructions"
         if not self.resource_prefix:
             return self
         self.firestore_database = self.resource_prefix
